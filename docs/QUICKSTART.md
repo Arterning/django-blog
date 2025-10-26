@@ -11,7 +11,16 @@
 
 ### 1. 配置PostgreSQL数据库
 
-首先创建一个PostgreSQL数据库：
+**选项A：使用自动化脚本创建数据库（推荐）**
+
+项目提供了自动创建数据库的脚本：
+
+```bash
+# 先配置.env文件（见步骤2），然后运行：
+uv run python create_database.py
+```
+
+**选项B：手动创建数据库**
 
 ```bash
 # 登录PostgreSQL
@@ -24,22 +33,22 @@ CREATE DATABASE django_blog;
 \q
 ```
 
-### 2. 修改数据库配置
+### 2. 配置环境变量
 
-编辑 `mysite/settings.py` 文件第75-84行，修改数据库连接信息：
+在项目根目录创建 `.env` 文件（与manage.py同级），添加以下内容：
 
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'django_blog',          # 你的数据库名
-        'USER': 'postgres',             # 你的数据库用户
-        'PASSWORD': 'your_password',    # 你的数据库密码
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+```env
+# PostgreSQL数据库配置
+DB_NAME=django_blog
+DB_USER=postgres
+DB_PASSWORD=你的数据库密码
+DB_HOST=localhost
+DB_PORT=5432
 ```
+
+**重要提示**：
+- ⚠️ 如果密码包含中文或特殊字符，建议修改为纯英文+数字
+- ⚠️ 遇到编码问题请查看 [DATABASE_SETUP.md](DATABASE_SETUP.md) 详细配置指南
 
 ### 3. 运行数据库迁移
 
