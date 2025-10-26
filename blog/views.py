@@ -13,6 +13,7 @@ import zipfile
 import frontmatter
 import markdown
 import tempfile
+import re
 
 
 # 用户认证视图
@@ -145,6 +146,23 @@ def upload_markdown(request):
     return render(request, 'blog/upload_markdown.html', {'form': form})
 
 
+def clean_notion_filename(filename):
+    """
+    清理Notion导出的文件名，去掉UUID哈希
+    例如: "2025 211130a0ce0b80e8a540fd3052af5f90.md" -> "2025.md"
+    """
+    # 去掉文件扩展名
+    name_without_ext = os.path.splitext(filename)[0]
+
+    # Notion UUID 格式: 32个十六进制字符
+    # 匹配模式: 文件名后面跟着空格和32位十六进制字符
+    pattern = r'\s+[0-9a-f]{32}$'
+    cleaned_name = re.sub(pattern, '', name_without_ext, flags=re.IGNORECASE)
+
+    # 如果没有匹配到Notion格式，返回原始文件名（不含扩展名）
+    return cleaned_name if cleaned_name else name_without_ext
+
+
 def process_markdown_file(md_file, author):
     """处理单个markdown文件"""
     # 读取文件内容
@@ -168,17 +186,20 @@ def process_markdown_file(md_file, author):
     # 移除NUL字符(0x00)，PostgreSQL不允许这些字符
     content = content.replace('\x00', '')
 
+    # 清理文件名（去掉Notion UUID）
+    cleaned_filename = clean_notion_filename(md_file.name)
+
     # 尝试解析frontmatter
     try:
         post_data = frontmatter.loads(content)
-        title = post_data.get('title', os.path.splitext(md_file.name)[0])
+        title = post_data.get('title', cleaned_filename)
         tags = post_data.get('tags', '')
         category = post_data.get('category', '')
         summary = post_data.get('summary', '')
         content_body = post_data.content
     except:
-        # 如果没有frontmatter，使用文件名作为标题
-        title = os.path.splitext(md_file.name)[0]
+        # 如果没有frontmatter，使用清理后的文件名作为标题
+        title = cleaned_filename
         tags = ''
         category = ''
         summary = ''
@@ -242,16 +263,20 @@ def process_zip_file(zip_file, author):
                     # 移除NUL字符(0x00)，PostgreSQL不允许这些字符
                     content = content.replace('\x00', '')
 
+                    # 清理文件名（去掉Notion UUID）
+                    cleaned_filename = clean_notion_filename(os.path.basename(file_name))
+
                     # 解析frontmatter
                     try:
                         post_data = frontmatter.loads(content)
-                        title = post_data.get('title', os.path.splitext(os.path.basename(file_name))[0])
+                        title = post_data.get('title', cleaned_filename)
                         tags = post_data.get('tags', '')
                         category = post_data.get('category', '')
                         summary = post_data.get('summary', '')
                         content_body = post_data.content
                     except:
-                        title = os.path.splitext(os.path.basename(file_name))[0]
+                        # 如果没有frontmatter，使用清理后的文件名作为标题
+                        title = cleaned_filename
                         tags = ''
                         category = ''
                         summary = ''
