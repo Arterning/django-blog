@@ -1,0 +1,101 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}注册 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-6 text-center">注册</h1>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium mb-2">
+                    用户名
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.username.errors.0 }}</p>
+                {% else %}
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ form.username.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium mb-2">
+                    密码
+                </label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.password1.errors.0 }}</p>
+                {% else %}
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ form.password1.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium mb-2">
+                    确认密码
+                </label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.password2.errors.0 }}</p>
+                {% else %}
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ form.password2.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                注册
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600 dark:text-gray-400">
+                已有账号？
+                <a href="{% url 'login' %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    立即登录
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        background-color: white;
+        color: #111827;
+    }
+
+    .dark input[type="text"],
+    .dark input[type="password"] {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        outline: none;
+        border-color: #2563eb;
+        ring: 2px;
+        ring-color: #2563eb;
+    }
+
+    ul.errorlist {
+        display: none;
+    }
+</style>
+{% endblock %}

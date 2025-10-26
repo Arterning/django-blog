@@ -1,0 +1,13 @@
+[project]
+name = "django-blog"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2.7",
+    "psycopg2-binary>=2.9.10",
+    "markdown>=3.7",
+    "python-frontmatter>=1.1.0",
+    "pillow>=11.1.0",
+]

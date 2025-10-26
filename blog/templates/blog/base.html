@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}我的博客{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 自定义样式 -->
+    <style>
+        /* 代码高亮样式 */
+        .codehilite { background: #f8f8f8; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        .dark .codehilite { background: #1e293b; }
+
+        /* Markdown渲染样式 */
+        .markdown-content h1 { @apply text-3xl font-bold mt-6 mb-4; }
+        .markdown-content h2 { @apply text-2xl font-bold mt-5 mb-3; }
+        .markdown-content h3 { @apply text-xl font-bold mt-4 mb-2; }
+        .markdown-content p { @apply mb-4; }
+        .markdown-content ul { @apply list-disc ml-6 mb-4; }
+        .markdown-content ol { @apply list-decimal ml-6 mb-4; }
+        .markdown-content a { @apply text-blue-600 hover:underline; }
+        .dark .markdown-content a { @apply text-blue-400; }
+        .markdown-content blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
+        .dark .markdown-content blockquote { @apply border-gray-600; }
+        .markdown-content code { @apply bg-gray-100 px-1 py-0.5 rounded text-sm; }
+        .dark .markdown-content code { @apply bg-gray-800; }
+        .markdown-content pre { @apply my-4; }
+        .markdown-content table { @apply border-collapse w-full my-4; }
+        .markdown-content th, .markdown-content td { @apply border border-gray-300 px-4 py-2; }
+        .dark .markdown-content th, .dark .markdown-content td { @apply border-gray-600; }
+        .markdown-content th { @apply bg-gray-100 font-bold; }
+        .dark .markdown-content th { @apply bg-gray-800; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- 导航栏 -->
+    <nav class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="{% url 'post_list' %}" class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    我的博客
+                </a>
+
+                <div class="flex items-center space-x-4">
+                    <!-- 深色模式切换按钮 -->
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                        <span class="text-gray-700 dark:text-gray-300">你好，{{ user.username }}</span>
+                        {% if user.is_staff or user.is_superuser %}
+                            <a href="{% url 'upload_markdown' %}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                上传文章
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'logout' %}" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            登出
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            登录
+                        </a>
+                        <a href="{% url 'register' %}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            注册
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 消息提示 -->
+    {% if messages %}
+        <div class="container mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="p-4 mb-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100{% elif message.tags == 'error' %}bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100{% else %}bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- 主内容 -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white dark:bg-gray-800 mt-12 py-6 border-t border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400">
+            <p>&copy; 2024 我的博客. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 深色模式切换脚本 -->
+    <script>
+        $(document).ready(function() {
+            var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+            // 从localStorage获取主题设置
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                $('html').addClass('dark');
+                themeToggleLightIcon.classList.remove('hidden');
+            } else {
+                $('html').removeClass('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+            }
+
+            // 切换主题
+            $('#theme-toggle').click(function() {
+                // 切换图标
+                themeToggleDarkIcon.classList.toggle('hidden');
+                themeToggleLightIcon.classList.toggle('hidden');
+
+                // 切换主题
+                if ($('html').hasClass('dark')) {
+                    $('html').removeClass('dark');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    $('html').addClass('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,82 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}博客列表 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 text-center">博客文章</h1>
+
+    {% if page_obj %}
+        <div class="space-y-6">
+            {% for post in page_obj %}
+                <article class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                    <h2 class="text-2xl font-bold mb-2">
+                        <a href="{% url 'post_detail' post.pk %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            {{ post.title }}
+                        </a>
+                    </h2>
+
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        <span>作者: {{ post.author.username }}</span>
+                        <span class="mx-2">•</span>
+                        <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
+                        {% if post.category %}
+                            <span class="mx-2">•</span>
+                            <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                                {{ post.category }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">
+                        {{ post.get_summary }}
+                    </p>
+
+                    {% if post.tags %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in post.tags.split:',' %}
+                                <span class="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded">
+                                    {{ tag|trim }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+
+        <!-- 分页 -->
+        {% if page_obj.has_other_pages %}
+            <div class="mt-8 flex justify-center">
+                <nav class="flex space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            首页
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            上一页
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
+                        第 {{ page_obj.number }} 页 / 共 {{ page_obj.paginator.num_pages }} 页
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            下一页
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            末页
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-400 text-lg">暂无文章</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

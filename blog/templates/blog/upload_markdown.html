@@ -1,0 +1,80 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}上传Markdown文件 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-6">上传Markdown文件</h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- 单个文件上传 -->
+            <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">单个文件</h2>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium">选择单个Markdown文件</label>
+                    <input type="file" name="single_file" accept=".md,.markdown" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                </div>
+                <button type="submit" name="upload_type" value="single" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    上传单个文件
+                </button>
+            </div>
+
+            <!-- 多个文件上传 -->
+            <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">多个文件</h2>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium">选择多个Markdown文件</label>
+                    <input type="file" name="multiple_files" accept=".md,.markdown" multiple class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">可以按住Ctrl或Shift键选择多个文件</p>
+                </div>
+                <button type="submit" name="upload_type" value="multiple" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    上传多个文件
+                </button>
+            </div>
+
+            <!-- ZIP压缩包上传 -->
+            <div class="border border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                <h2 class="text-xl font-bold mb-4">ZIP压缩包</h2>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium">选择ZIP压缩包</label>
+                    <input type="file" name="zip_file" accept=".zip" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">系统将自动解压并导入所有.md文件</p>
+                </div>
+                <button type="submit" name="upload_type" value="zip" class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    上传ZIP文件
+                </button>
+            </div>
+        </form>
+
+        <!-- 说明 -->
+        <div class="mt-8 p-6 bg-blue-50 dark:bg-blue-900 rounded-lg">
+            <h3 class="text-lg font-bold mb-2 text-blue-900 dark:text-blue-100">使用说明</h3>
+            <ul class="list-disc list-inside space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                <li>支持上传.md和.markdown格式的文件</li>
+                <li>文件可以包含frontmatter元数据（如title, tags, category等）</li>
+                <li>如果没有frontmatter，将使用文件名作为标题</li>
+                <li>ZIP压缩包中的所有Markdown文件都会被导入</li>
+                <li>支持的frontmatter字段：title（标题）、tags（标签）、category（分类）、summary（摘要）</li>
+            </ul>
+        </div>
+
+        <!-- Frontmatter示例 -->
+        <div class="mt-6 p-6 bg-gray-50 dark:bg-gray-900 rounded-lg">
+            <h3 class="text-lg font-bold mb-2">Frontmatter示例</h3>
+            <pre class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto text-sm"><code>---
+title: 我的第一篇博客
+tags: [Python, Django, Web开发]
+category: 技术
+summary: 这是一篇关于Django开发的文章
+---
+
+# 文章内容从这里开始
+
+这是正文内容...</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
