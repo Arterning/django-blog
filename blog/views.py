@@ -117,7 +117,26 @@ def upload_markdown(request):
 
 def process_markdown_file(md_file, author):
     """处理单个markdown文件"""
-    content = md_file.read().decode('utf-8')
+    # 读取文件内容
+    raw_content = md_file.read()
+
+    # 尝试多种编码解码
+    encodings = ['utf-8', 'gbk', 'gb2312', 'utf-8-sig', 'latin1']
+    content = None
+
+    for encoding in encodings:
+        try:
+            content = raw_content.decode(encoding)
+            break
+        except (UnicodeDecodeError, AttributeError):
+            continue
+
+    # 如果所有编码都失败，使用errors='ignore'
+    if content is None:
+        content = raw_content.decode('utf-8', errors='ignore')
+
+    # 移除NUL字符(0x00)，PostgreSQL不允许这些字符
+    content = content.replace('\x00', '')
 
     # 尝试解析frontmatter
     try:
@@ -138,6 +157,13 @@ def process_markdown_file(md_file, author):
     # 如果tags是列表，转换为逗号分隔的字符串
     if isinstance(tags, list):
         tags = ', '.join(tags)
+
+    # 清理所有字段，移除NUL字符
+    title = str(title).replace('\x00', '')
+    tags = str(tags).replace('\x00', '')
+    category = str(category).replace('\x00', '')
+    summary = str(summary).replace('\x00', '')
+    content_body = str(content_body).replace('\x00', '')
 
     # 创建博客文章
     Post.objects.create(
@@ -165,7 +191,26 @@ def process_zip_file(zip_file, author):
         for file_name in zip_ref.namelist():
             if file_name.endswith('.md') or file_name.endswith('.markdown'):
                 with zip_ref.open(file_name) as md_file:
-                    content = md_file.read().decode('utf-8')
+                    # 读取文件内容
+                    raw_content = md_file.read()
+
+                    # 尝试多种编码解码
+                    encodings = ['utf-8', 'gbk', 'gb2312', 'utf-8-sig', 'latin1']
+                    content = None
+
+                    for encoding in encodings:
+                        try:
+                            content = raw_content.decode(encoding)
+                            break
+                        except (UnicodeDecodeError, AttributeError):
+                            continue
+
+                    # 如果所有编码都失败，使用errors='ignore'
+                    if content is None:
+                        content = raw_content.decode('utf-8', errors='ignore')
+
+                    # 移除NUL字符(0x00)，PostgreSQL不允许这些字符
+                    content = content.replace('\x00', '')
 
                     # 解析frontmatter
                     try:
@@ -185,6 +230,13 @@ def process_zip_file(zip_file, author):
                     # 如果tags是列表，转换为逗号分隔的字符串
                     if isinstance(tags, list):
                         tags = ', '.join(tags)
+
+                    # 清理所有字段，移除NUL字符
+                    title = str(title).replace('\x00', '')
+                    tags = str(tags).replace('\x00', '')
+                    category = str(category).replace('\x00', '')
+                    summary = str(summary).replace('\x00', '')
+                    content_body = str(content_body).replace('\x00', '')
 
                     # 创建文章
                     Post.objects.create(
