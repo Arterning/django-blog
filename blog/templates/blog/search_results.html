@@ -1,20 +1,20 @@
 {% extends 'blog/base.html' %}
 {% load blog_tags %}
 
-{% block title %}博客列表 - 我的博客{% endblock %}
+{% block title %}搜索结果 - 我的博客{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <h1 class="text-4xl font-bold mb-6 text-center">博客文章</h1>
-
     <!-- 搜索框 -->
     <div class="mb-8">
         <form method="get" action="{% url 'search_posts' %}" class="flex gap-2">
             <input
                 type="text"
                 name="q"
+                value="{{ query }}"
                 placeholder="搜索博客文章..."
                 class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                autofocus
             >
             <button
                 type="submit"
@@ -25,6 +25,18 @@
         </form>
     </div>
 
+    <!-- 搜索结果标题 -->
+    {% if query %}
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold mb-2">搜索结果</h1>
+            <p class="text-gray-600 dark:text-gray-400">
+                关键词 "<span class="font-semibold text-blue-600 dark:text-blue-400">{{ query }}</span>"
+                共找到 <span class="font-semibold">{{ total_results }}</span> 篇文章
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- 搜索结果列表 -->
     {% if page_obj %}
         <div class="space-y-6">
             {% for post in page_obj %}
@@ -69,10 +81,10 @@
             <div class="mt-8 flex justify-center">
                 <nav class="flex space-x-2">
                     {% if page_obj.has_previous %}
-                        <a href="?page=1" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <a href="?q={{ query }}&page=1" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             首页
                         </a>
-                        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             上一页
                         </a>
                     {% endif %}
@@ -82,10 +94,10 @@
                     </span>
 
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <a href="?q={{ query }}&page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             下一页
                         </a>
-                        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             末页
                         </a>
                     {% endif %}
@@ -93,9 +105,21 @@
             </div>
         {% endif %}
     {% else %}
-        <div class="text-center py-12">
-            <p class="text-gray-600 dark:text-gray-400 text-lg">暂无文章</p>
+        <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
+            {% if query %}
+                <p class="text-gray-600 dark:text-gray-400 text-lg">未找到相关文章</p>
+                <p class="text-gray-500 dark:text-gray-500 mt-2">请尝试使用其他关键词搜索</p>
+            {% else %}
+                <p class="text-gray-600 dark:text-gray-400 text-lg">请输入关键词进行搜索</p>
+            {% endif %}
         </div>
     {% endif %}
+
+    <!-- 返回首页链接 -->
+    <div class="mt-8 text-center">
+        <a href="{% url 'post_list' %}" class="text-blue-600 dark:text-blue-400 hover:underline">
+            返回博客首页
+        </a>
+    </div>
 </div>
 {% endblock %}

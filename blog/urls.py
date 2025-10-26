@@ -10,6 +10,7 @@ urlpatterns = [
     # 博客相关
     path('', views.post_list, name='post_list'),
     path('post/<int:pk>/', views.post_detail, name='post_detail'),
+    path('search/', views.search_posts, name='search_posts'),
 
     # 管理员功能
     path('upload/', views.upload_markdown, name='upload_markdown'),

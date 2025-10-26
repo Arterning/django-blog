@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.db.models import Q
 from .models import Post
 from .forms import MarkdownUploadForm
 import os
@@ -72,6 +73,35 @@ def post_detail(request, pk):
     md = markdown.Markdown(extensions=['extra', 'codehilite', 'toc'])
     post.html_content = md.convert(post.content)
     return render(request, 'blog/post_detail.html', {'post': post})
+
+
+def search_posts(request):
+    """搜索博客文章"""
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        # 使用Q对象进行OR查询，搜索标题、内容、摘要、标签和分类
+        posts = Post.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(summary__icontains=query) |
+            Q(tags__icontains=query) |
+            Q(category__icontains=query),
+            is_published=True
+        ).distinct()
+    else:
+        posts = Post.objects.none()
+
+    # 分页
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'blog/search_results.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'total_results': posts.count()
+    })
 
 
 # 管理员功能
