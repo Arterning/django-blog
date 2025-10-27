@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Q
 from .models import Post
-from .forms import MarkdownUploadForm
+from .forms import MarkdownUploadForm, PostForm
 import os
 import zipfile
 import frontmatter
@@ -144,6 +144,65 @@ def upload_markdown(request):
         form = MarkdownUploadForm()
 
     return render(request, 'blog/upload_markdown.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def create_post(request):
+    """管理员创建新博客文章"""
+    if request.method == 'POST':
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            messages.success(request, '博客文章创建成功！')
+            return redirect('post_detail', pk=post.pk)
+    else:
+        form = PostForm()
+
+    return render(request, 'blog/post_form.html', {
+        'form': form,
+        'title': '创建新文章',
+        'button_text': '发布文章'
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def edit_post(request, pk):
+    """管理员编辑博客文章"""
+    post = get_object_or_404(Post, pk=pk)
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '博客文章更新成功！')
+            return redirect('post_detail', pk=post.pk)
+    else:
+        form = PostForm(instance=post)
+
+    return render(request, 'blog/post_form.html', {
+        'form': form,
+        'post': post,
+        'title': '编辑文章',
+        'button_text': '保存修改'
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def delete_post(request, pk):
+    """管理员删除博客文章"""
+    post = get_object_or_404(Post, pk=pk)
+
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, '博客文章已删除！')
+        return redirect('post_list')
+
+    return render(request, 'blog/post_confirm_delete.html', {'post': post})
 
 
 def clean_notion_filename(filename):

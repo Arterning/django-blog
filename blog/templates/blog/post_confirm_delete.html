@@ -1,0 +1,52 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}删除文章 - {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold mb-6 text-red-600 dark:text-red-400">确认删除文章</h1>
+
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">警告</h3>
+                    <p class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                        您确定要删除这篇文章吗？此操作无法撤销。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ post.title }}</h2>
+            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <p><strong>作者:</strong> {{ post.author.username }}</p>
+                <p><strong>创建时间:</strong> {{ post.created_at|date:"Y年m月d日 H:i" }}</p>
+                <p><strong>分类:</strong> {{ post.category }}</p>
+                <p><strong>标签:</strong> {{ post.tags }}</p>
+                {% if post.summary %}
+                <p class="mt-2"><strong>摘要:</strong> {{ post.summary|truncatewords:30 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="post" class="flex items-center justify-between">
+            {% csrf_token %}
+            <a href="{% url 'post_detail' post.pk %}"
+               class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                取消
+            </a>
+            <button type="submit"
+                    class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+                确认删除
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

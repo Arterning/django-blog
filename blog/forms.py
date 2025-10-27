@@ -1,4 +1,5 @@
 from django import forms
+from .models import Post
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -38,3 +39,45 @@ class MarkdownUploadForm(forms.Form):
         label='ZIP压缩包',
         widget=forms.FileInput(attrs={'accept': '.zip'})
     )
+
+
+class PostForm(forms.ModelForm):
+    """博客文章创建/编辑表单"""
+    class Meta:
+        model = Post
+        fields = ['title', 'content', 'summary', 'tags', 'category', 'is_published']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white',
+                'placeholder': '请输入文章标题'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white',
+                'placeholder': '支持Markdown格式',
+                'rows': 15
+            }),
+            'summary': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white',
+                'placeholder': '文章摘要(可选,留空将自动从内容提取)',
+                'rows': 3
+            }),
+            'tags': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white',
+                'placeholder': '多个标签用逗号分隔,如: Python, Django, Web开发'
+            }),
+            'category': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white',
+                'placeholder': '文章分类,如: 技术教程'
+            }),
+            'is_published': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+            })
+        }
+        labels = {
+            'title': '文章标题',
+            'content': '文章内容',
+            'summary': '文章摘要',
+            'tags': '标签',
+            'category': '分类',
+            'is_published': '立即发布'
+        }

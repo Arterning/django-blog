@@ -1,0 +1,121 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ title }} - 博客管理{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">{{ title }}</h1>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">出错了！</strong>
+                <ul class="mt-2 list-disc list-inside">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.title.label }}
+                </label>
+                {{ form.title }}
+                {% if form.title.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.title.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.category.label }}
+                </label>
+                {{ form.category }}
+                {% if form.category.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.category.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.tags.label }}
+                </label>
+                {{ form.tags }}
+                {% if form.tags.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.tags.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.summary.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.summary.label }}
+                </label>
+                {{ form.summary }}
+                {% if form.summary.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.summary.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ form.content.label }}
+                </label>
+                {{ form.content }}
+                {% if form.content.help_text %}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ form.content.help_text }}</p>
+                {% endif %}
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span class="font-medium">Markdown语法提示：</span><br>
+                    # 一级标题 | ## 二级标题 | **粗体** | *斜体* | [链接](url) | ![图片](url) | `代码` | ```代码块```
+                </p>
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" name="{{ form.is_published.name }}" id="{{ form.is_published.id_for_label }}"
+                       {% if form.is_published.value %}checked{% endif %}
+                       class="{{ form.is_published.field.widget.attrs.class }}">
+                <label for="{{ form.is_published.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ form.is_published.label }}
+                </label>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a href="{% if post %}{% url 'post_detail' post.pk %}{% else %}{% url 'post_list' %}{% endif %}"
+                   class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    取消
+                </a>
+                <button type="submit"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
+                    {{ button_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if post %}
+    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">预览效果</h2>
+        <div class="markdown-content prose dark:prose-invert max-w-none">
+            <h3 class="text-2xl font-bold mb-2">{{ post.title }}</h3>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <span>分类: {{ post.category }}</span> |
+                <span>标签: {{ post.tags }}</span>
+            </div>
+            {% if post.summary %}
+            <p class="text-gray-600 dark:text-gray-400 italic mb-4">{{ post.summary }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
