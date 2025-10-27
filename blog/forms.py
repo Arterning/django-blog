@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post
+from .models import Post, Comment
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -80,4 +80,22 @@ class PostForm(forms.ModelForm):
             'tags': '标签',
             'category': '分类',
             'is_published': '立即发布'
+        }
+
+
+class CommentForm(forms.ModelForm):
+    """评论表单"""
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none',
+                'placeholder': '发表你的评论... 支持Markdown语法和Emoji表情 😊',
+                'rows': 4,
+                'id': 'comment-textarea'
+            })
+        }
+        labels = {
+            'content': ''
         }

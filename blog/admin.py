@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post
+from .models import Post, Comment
 
 
 @admin.register(Post)
@@ -9,3 +9,13 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ['title', 'content', 'tags']
     date_hierarchy = 'created_at'
     ordering = ['-created_at']
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['author', 'post', 'created_at', 'parent']
+    list_filter = ['created_at']
+    search_fields = ['content', 'author__username', 'post__title']
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at']
+    raw_id_fields = ['post', 'parent']

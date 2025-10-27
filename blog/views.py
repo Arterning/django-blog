@@ -6,8 +6,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import Post
-from .forms import MarkdownUploadForm, PostForm
+from .models import Post, Comment
+from .forms import MarkdownUploadForm, PostForm, CommentForm
 import os
 import zipfile
 import frontmatter
@@ -70,10 +70,46 @@ def post_list(request):
 def post_detail(request, pk):
     """博客详情页面"""
     post = get_object_or_404(Post, pk=pk, is_published=True)
+
     # 将markdown转换为HTML
     md = markdown.Markdown(extensions=['extra', 'codehilite', 'toc'])
     post.html_content = md.convert(post.content)
-    return render(request, 'blog/post_detail.html', {'post': post})
+
+    # 获取评论（只获取顶级评论，回复通过parent关系获取）
+    comments = post.comments.filter(parent=None).select_related('author').prefetch_related('replies__author')
+
+    # 处理评论提交
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+
+            # 处理回复（如果有parent_id）
+            parent_id = request.POST.get('parent_id')
+            if parent_id:
+                parent_comment = get_object_or_404(Comment, pk=parent_id)
+                comment.parent = parent_comment
+
+            comment.save()
+            messages.success(request, '评论发表成功！')
+            return redirect('post_detail', pk=pk)
+    else:
+        form = CommentForm()
+
+    # 转换评论内容为HTML（支持Markdown）
+    for comment in comments:
+        comment.html_content = md.convert(comment.content)
+        for reply in comment.replies.all():
+            reply.html_content = md.convert(reply.content)
+
+    return render(request, 'blog/post_detail.html', {
+        'post': post,
+        'comments': comments,
+        'comment_form': form,
+        'comment_count': post.comments.count()
+    })
 
 
 def search_posts(request):
@@ -203,6 +239,25 @@ def delete_post(request, pk):
         return redirect('post_list')
 
     return render(request, 'blog/post_confirm_delete.html', {'post': post})
+
+
+@login_required
+def delete_comment(request, pk):
+    """删除评论（评论作者或管理员可删除）"""
+    comment = get_object_or_404(Comment, pk=pk)
+    post_pk = comment.post.pk
+
+    # 检查权限：评论作者或管理员可以删除
+    if request.user == comment.author or request.user.is_staff or request.user.is_superuser:
+        if request.method == 'POST':
+            comment.delete()
+            messages.success(request, '评论已删除！')
+            return redirect('post_detail', pk=post_pk)
+    else:
+        messages.error(request, '你没有权限删除此评论！')
+        return redirect('post_detail', pk=post_pk)
+
+    return redirect('post_detail', pk=post_pk)
 
 
 def clean_notion_filename(filename):

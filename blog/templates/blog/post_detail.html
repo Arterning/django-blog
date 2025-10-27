@@ -69,10 +69,166 @@
         </div>
     </article>
 
-    <!-- 评论区占位（后续实现） -->
+    <!-- 评论区 -->
     <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
-        <h2 class="text-2xl font-bold mb-4">评论</h2>
-        <p class="text-gray-600 dark:text-gray-400">评论功能即将推出...</p>
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            评论 ({{ comment_count }})
+        </h2>
+
+        <!-- 发表评论表单 -->
+        {% if user.is_authenticated %}
+        <div class="mb-8">
+            <form method="post" id="comment-form" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="parent_id" id="parent-id" value="">
+
+                <div id="reply-info" class="hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
+                    <span class="text-sm text-blue-800 dark:text-blue-200" id="reply-text"></span>
+                    <button type="button" onclick="cancelReply()" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {{ comment_form.content }}
+
+                <div class="flex items-center justify-between">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        支持 <strong>Markdown</strong> 语法和 <strong>Emoji</strong> 表情 😊 👍 🎉
+                    </div>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
+                        发表评论
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="mb-8 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center">
+            <p class="text-gray-600 dark:text-gray-400">
+                <a href="{% url 'login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">登录</a>
+                或
+                <a href="{% url 'register' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">注册</a>
+                后发表评论
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- 评论列表 -->
+        {% if comments %}
+        <div class="space-y-6">
+            {% for comment in comments %}
+            <div class="border-l-4 border-blue-500 pl-4" id="comment-{{ comment.id }}">
+                <!-- 评论头部 -->
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {{ comment.author.username|first|upper }}
+                        </div>
+                        <div>
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ comment.author.username }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                {{ comment.created_at|date:"Y-m-d H:i" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        {% if user.is_authenticated %}
+                        <button onclick="replyTo({{ comment.id }}, '{{ comment.author.username }}')" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm">
+                            回复
+                        </button>
+                        {% endif %}
+
+                        {% if user == comment.author or user.is_staff or user.is_superuser %}
+                        <form method="post" action="{% url 'delete_comment' comment.pk %}" class="inline" onsubmit="return confirm('确定要删除这条评论吗？');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-sm">
+                                删除
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 评论内容 -->
+                <div class="markdown-content prose dark:prose-invert max-w-none mt-2 text-gray-700 dark:text-gray-300">
+                    {{ comment.html_content|safe }}
+                </div>
+
+                <!-- 回复列表 -->
+                {% if comment.replies.all %}
+                <div class="mt-4 ml-8 space-y-4">
+                    {% for reply in comment.replies.all %}
+                    <div class="border-l-2 border-gray-300 dark:border-gray-600 pl-4" id="comment-{{ reply.id }}">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-6 h-6 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    {{ reply.author.username|first|upper }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-sm text-gray-900 dark:text-white">{{ reply.author.username }}</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                        {{ reply.created_at|date:"Y-m-d H:i" }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                {% if user.is_authenticated %}
+                                <button onclick="replyTo({{ comment.id }}, '{{ reply.author.username }}')" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-xs">
+                                    回复
+                                </button>
+                                {% endif %}
+
+                                {% if user == reply.author or user.is_staff or user.is_superuser %}
+                                <form method="post" action="{% url 'delete_comment' reply.pk %}" class="inline" onsubmit="return confirm('确定要删除这条回复吗？');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-xs">
+                                        删除
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="markdown-content prose prose-sm dark:prose-invert max-w-none mt-2 text-gray-700 dark:text-gray-300">
+                            {{ reply.html_content|safe }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400">还没有评论，来发表第一条评论吧！</p>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<script>
+function replyTo(commentId, username) {
+    document.getElementById('parent-id').value = commentId;
+    document.getElementById('reply-info').classList.remove('hidden');
+    document.getElementById('reply-text').textContent = '回复 @' + username;
+    document.getElementById('comment-textarea').focus();
+    // 滚动到评论框
+    document.getElementById('comment-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelReply() {
+    document.getElementById('parent-id').value = '';
+    document.getElementById('reply-info').classList.add('hidden');
+}
+</script>
 {% endblock %}
