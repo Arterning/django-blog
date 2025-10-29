@@ -1,0 +1,169 @@
+{% extends 'blog/base.html' %}
+{% load blog_tags %}
+
+{% block title %}标签云 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- 页面标题 -->
+    <div class="mb-8 text-center">
+        <h1 class="text-4xl font-bold mb-3 text-gray-900 dark:text-white">
+            <svg class="w-10 h-10 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            标签云
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+            探索 {{ sorted_tags|length }} 个话题，发现感兴趣的内容
+        </p>
+    </div>
+
+    <!-- 标签云区域 -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+        {% if sorted_tags %}
+        <div class="flex flex-wrap gap-3 justify-center">
+            {% for tag, count in sorted_tags %}
+                {% if count >= 5 %}
+                    {% with size_class="text-2xl" %}
+                <a href="?tag={{ tag }}"
+                   class="inline-block px-6 py-3 {{ size_class }} bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-110 shadow-lg {% if selected_tag == tag %}ring-4 ring-blue-300 dark:ring-blue-700{% endif %}">
+                    #{{ tag }}
+                    <span class="ml-2 text-sm bg-white/20 px-2 py-0.5 rounded-full">{{ count }}</span>
+                </a>
+                    {% endwith %}
+                {% elif count >= 3 %}
+                    {% with size_class="text-xl" %}
+                <a href="?tag={{ tag }}"
+                   class="inline-block px-5 py-2.5 {{ size_class }} bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full hover:from-green-600 hover:to-teal-700 transition-all transform hover:scale-110 shadow-md {% if selected_tag == tag %}ring-4 ring-green-300 dark:ring-green-700{% endif %}">
+                    #{{ tag }}
+                    <span class="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">{{ count }}</span>
+                </a>
+                    {% endwith %}
+                {% else %}
+                    {% with size_class="text-base" %}
+                <a href="?tag={{ tag }}"
+                   class="inline-block px-4 py-2 {{ size_class }} bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-110 shadow {% if selected_tag == tag %}ring-4 ring-gray-300 dark:ring-gray-700{% endif %}">
+                    #{{ tag }}
+                    <span class="ml-1 text-xs bg-white/20 px-1.5 py-0.5 rounded-full">{{ count }}</span>
+                </a>
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="mt-6 text-center">
+            <div class="inline-flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mr-2"></span>
+                    5+ 篇文章
+                </span>
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-gradient-to-r from-green-500 to-teal-600 rounded-full mr-2"></span>
+                    3-4 篇文章
+                </span>
+                <span class="flex items-center">
+                    <span class="w-3 h-3 bg-gradient-to-r from-gray-500 to-gray-600 rounded-full mr-2"></span>
+                    1-2 篇文章
+                </span>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="w-20 h-20 mx-auto text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">暂无标签</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 已选择的标签提示 -->
+    {% if selected_tag %}
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex items-center justify-between">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-blue-800 dark:text-blue-200">
+                当前筛选标签: <strong class="font-semibold">#{{ selected_tag }}</strong>
+                (共 {{ total_posts }} 篇文章)
+            </span>
+        </div>
+        <a href="{% url 'tag_cloud' %}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium">
+            清除筛选
+        </a>
+    </div>
+
+    <!-- 文章列表 -->
+    {% if page_obj %}
+    <div class="space-y-6">
+        {% for post in page_obj %}
+        <article class="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow p-6">
+            <h2 class="text-2xl font-bold mb-3">
+                <a href="{% url 'post_detail' post.pk %}" class="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    {{ post.title }}
+                </a>
+            </h2>
+
+            <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <span>{{ post.author.username }}</span>
+                <span class="mx-2">•</span>
+                <span>{{ post.created_at|date:"Y-m-d" }}</span>
+                {% if post.category %}
+                <span class="mx-2">•</span>
+                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
+                    {{ post.category }}
+                </span>
+                {% endif %}
+            </div>
+
+            <p class="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
+                {{ post.get_summary }}
+            </p>
+
+            {% if post.tags %}
+            <div class="flex flex-wrap gap-2 mb-4">
+                {% for tag in post.tags|split_tags %}
+                <a href="?tag={{ tag }}" class="px-3 py-1 text-sm {% if selected_tag == tag %}bg-blue-500 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600{% endif %} rounded-full transition-colors">
+                    #{{ tag }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <a href="{% url 'post_detail' post.pk %}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium inline-flex items-center">
+                阅读全文
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center mt-8">
+        <nav class="inline-flex rounded-md shadow">
+            {% if page_obj.has_previous %}
+            <a href="?tag={{ selected_tag }}&page={{ page_obj.previous_page_number }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                上一页
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-300 border-t border-b border-gray-300 dark:border-gray-600">
+                第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 页
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?tag={{ selected_tag }}&page={{ page_obj.next_page_number }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:bg-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                下一页
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

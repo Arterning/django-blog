@@ -141,6 +141,48 @@ def search_posts(request):
     })
 
 
+def tag_cloud(request):
+    """标签云页面 - 显示所有标签和按标签筛选的文章"""
+    # 获取所有已发布文章的标签
+    all_posts = Post.objects.filter(is_published=True).exclude(tags='')
+
+    # 统计所有标签及其出现次数
+    tag_counts = {}
+    for post in all_posts:
+        # 分割标签（支持逗号和中文逗号）
+        tags = [tag.strip() for tag in post.tags.replace('，', ',').split(',') if tag.strip()]
+        for tag in tags:
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+    # 按文章数量降序排序
+    sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
+
+    # 获取选中的标签
+    selected_tag = request.GET.get('tag', '').strip()
+
+    # 如果选择了标签，筛选文章
+    if selected_tag:
+        posts = Post.objects.filter(
+            tags__icontains=selected_tag,
+            is_published=True
+        ).order_by('-created_at')
+
+        # 分页
+        paginator = Paginator(posts, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+    else:
+        page_obj = None
+        posts = None
+
+    return render(request, 'blog/tag_cloud.html', {
+        'sorted_tags': sorted_tags,
+        'selected_tag': selected_tag,
+        'page_obj': page_obj,
+        'total_posts': posts.count() if posts else 0
+    })
+
+
 # 管理员功能
 def is_admin(user):
     """检查用户是否为管理员"""
